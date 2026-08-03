@@ -1,0 +1,131 @@
+:root {
+  --color-bg: #f6f2ea;
+  --color-surface: #fff;
+  --color-text: #1d1d1f;
+  --color-muted: #6e6e73;
+  --color-border: #e5e0d6;
+  --color-primary: #2d6a3d;
+  --color-error: #8a1c1c;
+  --color-error-bg: #fbeeee;
+  --color-success: #2e7d32;
+  --color-success-bg: #e7f0e9;
+  --color-success-text: #1f5a2c;
+  --color-warning: #c9a227;
+  --color-warning-bg: #fbefd0;
+  --color-warning-text: #7a5a10;
+  --color-info-bg: #e8f0fa;
+  --color-info-text: #1f3f66;
+  --color-neutral-bg: #eee;
+  --color-snackbar-bg: #1d1d1f;
+  --color-snackbar-action: #9fd8a8;
+  --radius-pill: 999px;
+  --radius-btn: 10px;
+  --btn-shadow: none;
+  --btn-primary-bg: #1f3d29;
+  --radius-card: 16px;
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  --font: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* Teksts tikai ekrāna lasītājiem */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Kopīgās pogas, parastā ir balta un primary ir zaļa */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: var(--radius-btn);
+  background: var(--color-surface);
+  box-shadow: var(--btn-shadow);
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background 120ms ease, box-shadow 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: #f6f6f3;
+    border-color: rgba(0, 0, 0, 0.24);
+  }
+
+  &.primary,
+  &.active {
+    border-color: transparent;
+    background: var(--btn-primary-bg);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: var(--btn-primary-bg);
+      filter: brightness(1.15);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba(45, 106, 61, 0.3);
+    outline-offset: 2px;
+  }
+}
+
+/* Kopīgie teksta lauki */
+.field {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(45, 106, 61, 0.18);
+  }
+}
+
+/* Kļūdas josla zem rīkjoslas kartē un dobes lapā */
+.error {
+  padding: 8px 12px;
+  background: #fdecea;
+  color: var(--color-error);
+  font-size: 13px;
+}
