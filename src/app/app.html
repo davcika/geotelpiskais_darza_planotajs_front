@@ -1,0 +1,26 @@
+<router-outlet />
+@defer (on idle) { <app-tour /> }
+<app-task-undo-snackbar />
+
+<!-- Cilņu josla tikai telefonā, un login vai onboarding lapās tās nav -->
+@if (tabBar()) {
+  <nav class="tabbar" aria-label="Main">
+    <a routerLink="/today" routerLinkActive="active" ariaCurrentWhenActive="page"><span aria-hidden="true">☀</span>Today</a>
+    <a routerLink="/" [class.active]="planActive()" [attr.aria-current]="planActive() ? 'page' : null"><span aria-hidden="true">🗺</span>Plan</a>
+    <a routerLink="/plants" routerLinkActive="active" ariaCurrentWhenActive="page"><span aria-hidden="true">🌱</span>Plants</a>
+    <button #moreButton type="button" [attr.aria-expanded]="moreOpen()" aria-controls="more-sheet" (click)="toggleMore()">
+      <span aria-hidden="true">⋯</span>More
+    </button>
+  </nav>
+
+  @if (moreOpen()) {
+    <div class="sheet-backdrop" (click)="closeMore()"></div>
+    <div class="sheet" id="more-sheet" role="dialog" aria-modal="true" aria-label="More" #sheet (keydown.escape)="closeMore()" (keydown.tab)="trapFocus($event)" (keydown.shift.tab)="trapFocus($event)">
+      <button type="button" (click)="startTutorial()">Start tutorial</button>
+      <a routerLink="/my-plants" (click)="moreOpen.set(false)">My plants</a>
+      <a routerLink="/switch-garden" (click)="moreOpen.set(false)">Switch garden</a>
+      <button type="button" (click)="logout()">Log out</button>
+      <button type="button" class="cancel" (click)="closeMore()">Close</button>
+    </div>
+  }
+}
