@@ -1,0 +1,208 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--tabbar-height, 0px));
+  height: calc(100dvh - var(--tabbar-height, 0px));
+}
+
+/* Palīdzība un konts rīkjoslā ir labajā pusē */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+
+  > .btn,
+  .group > .btn {
+    min-height: 44px;
+  }
+
+  .group {
+    display: flex;
+    gap: 6px;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .hint {
+    font-size: 13px;
+  }
+
+  ::ng-deep .trigger.warn {
+    color: var(--color-warning-text);
+    background: var(--color-warning-bg);
+  }
+}
+
+.toolbar .btn .label {
+  margin-left: 6px;
+}
+
+/* Uz šaura telefona pogām paliek tikai ikonas */
+@media (max-width: 560px) {
+  .toolbar {
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  .toolbar .btn .label {
+    display: none;
+  }
+}
+
+.error {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+}
+
+.map-area {
+  position: relative;
+  min-height: 0;
+}
+
+/* Robeža, ko var vilkt, lai mainītu kartes un paneļa izmēru */
+.divider {
+  display: grid;
+  place-items: center;
+  height: 14px;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  cursor: row-resize;
+  touch-action: none;
+
+  span {
+    width: 40px;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-border);
+  }
+
+  &:hover span,
+  &:focus-visible span {
+    background: var(--color-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* Atstarpe apakšā, lai apakšējā josla neaizsedz saturu, piemēram asistenta ievadi */
+.dashboard {
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: calc(var(--tabbar-height, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
+  scroll-padding-bottom: calc(var(--tabbar-height, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
+  box-sizing: border-box;
+}
+
+/* Platā ekrānā panelis ir pa kreisi un karte pa labi */
+.split.wide {
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'dash divider map';
+
+  .map-area {
+    grid-area: map;
+  }
+
+  .dashboard {
+    grid-area: dash;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .divider {
+    grid-area: divider;
+    width: 14px;
+    height: auto;
+    border-top: 0;
+    cursor: col-resize;
+
+    span {
+      width: 4px;
+      height: 40px;
+    }
+  }
+}
+
+.map-host {
+  position: absolute;
+  inset: 0;
+}
+
+.warnings {
+  display: grid;
+  width: min(340px, calc(100vw - 48px));
+  max-height: 50vh;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+
+  li {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 8px;
+    align-items: start;
+    padding: 8px;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
+  li + li {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .icon {
+    color: var(--color-warning-text);
+    text-align: center;
+  }
+
+  .crown,
+  .crown .icon {
+    color: var(--color-error);
+  }
+}
+
+.toolbar a.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+
+.icon-btn {
+  min-width: 44px;
+}
+
+.error .retry {
+  margin-left: 12px;
+}
+
+.map-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  z-index: 5;
+  pointer-events: none;
+}
