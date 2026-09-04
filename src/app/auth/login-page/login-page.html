@@ -1,0 +1,44 @@
+<main class="card">
+  <h1>Garden planner</h1>
+
+  <form (submit)="submit($event)">
+    <label>
+      Email
+      <input class="field" type="email" name="email" autocomplete="email" required />
+    </label>
+    <label>
+      Password
+      <input
+        class="field"
+        type="password"
+        name="password"
+        [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+        required
+        minlength="8"
+        maxlength="72"
+      />
+    </label>
+    @if (mode() === 'register') {
+      <label>
+        Repeat password
+        <input class="field" type="password" name="passwordRepeat" autocomplete="new-password" required />
+      </label>
+    }
+
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+
+    <button type="submit" class="btn primary" [disabled]="busy()">
+      {{ mode() === 'login' ? 'Log in' : 'Create account' }}
+    </button>
+  </form>
+
+  <button type="button" class="link" (click)="toggleMode()">
+    {{ mode() === 'login' ? 'No account? Create one' : 'Already have an account? Log in' }}
+  </button>
+
+  @if (isDev) {
+    <button type="button" class="btn dev" [disabled]="busy()" (click)="devLogin()">Dev login</button>
+  }
+</main>

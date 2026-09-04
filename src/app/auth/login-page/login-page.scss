@@ -1,0 +1,56 @@
+:host {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.card {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  padding: 24px;
+  background: white;
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.link {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dev {
+  border-style: dashed;
+  border-color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 13px;
+}
