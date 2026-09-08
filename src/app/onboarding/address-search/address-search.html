@@ -1,0 +1,66 @@
+<div class="search" [class.open]="open()">
+  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="11" cy="11" r="7" />
+    <line x1="16.5" y1="16.5" x2="21" y2="21" />
+  </svg>
+  <input
+    #input
+    type="text"
+    role="combobox"
+    aria-label="Address"
+    aria-autocomplete="list"
+    autocomplete="off"
+    placeholder="Start typing your address"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="listId"
+    [attr.aria-activedescendant]="open() && active() >= 0 ? optionId(active()) : null"
+    [value]="query()"
+    (input)="onInput(input.value)"
+    (keydown)="onKeydown($event)"
+  />
+  @if (state().kind === 'loading') {
+    <span class="spinner" aria-hidden="true"></span>
+  }
+  @if (query()) {
+    <button type="button" class="clear" aria-label="Clear" (click)="clear()">×</button>
+  }
+</div>
+
+@if (open()) {
+  <ul class="suggestions" role="listbox" [id]="listId" aria-label="Address suggestions">
+    @switch (state().kind) {
+      @case ('error') {
+        <li class="message">Search is unavailable. Try again.</li>
+      }
+      @case ('loading') {
+        @if (results().length === 0) {
+          <li class="message muted">Searching…</li>
+        }
+      }
+    }
+    @for (address of results(); track address.code; let i = $index) {
+      <li
+        role="option"
+        [id]="optionId(i)"
+        [attr.aria-selected]="i === active()"
+        [class.active]="i === active()"
+        (mousedown)="$event.preventDefault()"
+        (click)="pick(address)"
+      >
+        @for (part of highlight(address.label); track $index) {
+          @if (part.match) {
+            <strong>{{ part.text }}</strong>
+          } @else {
+            {{ part.text }}
+          }
+        }
+      </li>
+    } @empty {
+      @if (state().kind === 'done') {
+        <li class="message muted">No addresses found</li>
+      }
+    }
+  </ul>
+}
+
+<div class="sr-only" aria-live="polite">{{ announcement() }}</div>

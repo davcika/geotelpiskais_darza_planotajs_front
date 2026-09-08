@@ -1,0 +1,141 @@
+/* Izskats ņemts no Apple Spotlight un IBM Carbon meklēšanas lauka */
+:host {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 18px rgba(60, 45, 20, 0.08);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    box-shadow:
+      0 0 0 3px rgba(45, 106, 61, 0.18),
+      0 4px 18px rgba(60, 45, 20, 0.08);
+  }
+}
+
+.icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--color-muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 17px;
+  color: var(--color-text);
+
+  &::placeholder {
+    color: var(--color-muted);
+  }
+}
+
+.clear {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Spinneri rādām tikai, ja ielāde ilgst ilgāk par 300 ms, lai tas nemirgo */
+.spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  opacity: 0;
+  animation:
+    appear 0s 300ms forwards,
+    spin 800ms linear infinite;
+}
+
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 32px rgba(60, 45, 20, 0.12);
+
+  li {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--color-muted);
+    cursor: pointer;
+
+    strong {
+      color: var(--color-text);
+      font-weight: 600;
+    }
+
+    &.active,
+    &[role='option']:hover {
+      background: var(--color-bg);
+    }
+  }
+
+  .message {
+    cursor: default;
+  }
+
+  .muted {
+    color: var(--color-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search {
+    transition: none;
+  }
+}

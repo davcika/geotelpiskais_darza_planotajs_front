@@ -1,0 +1,60 @@
+<div #mapHost class="map" [class.visible]="step() !== 'search'"></div>
+
+@if (changing) {
+  <a class="cancel" routerLink="/">Cancel</a>
+}
+
+@if (step() === 'search') {
+  <main class="search-step">
+    <h1>Where is your garden?</h1>
+    <p class="lead">Find your address and we will take you there.</p>
+    <app-address-search [(query)]="query" (picked)="onPicked($event)" />
+    <button type="button" class="link" (click)="skipAddress()">Skip, I'll find it on the map</button>
+    @if (api.error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+    <footer>{{ attribution }}</footer>
+  </main>
+} @else {
+  <section class="card" aria-live="polite">
+    @if (step() === 'confirm') {
+      <p class="eyebrow">Is this the correct address?</p>
+      <p class="title">{{ address()?.label }}</p>
+      <div class="actions">
+        <button type="button" class="btn primary" (click)="confirmAddress()">Continue</button>
+        <button type="button" class="btn" (click)="backToSearch()">Search again</button>
+      </div>
+    } @else if (step() === 'frost') {
+      <app-frost-card [gardenId]="garden()!.id" [point]="point()" (done)="startDrawing()" />
+    } @else {
+      <p class="eyebrow">Outline your plot</p>
+      <p class="hint">Draw the border of the land you garden on. Beds and trees must stay inside it.</p>
+      @if (drawn()) {
+        <p class="hint">Drag the corners to adjust the outline.</p>
+      } @else {
+        <app-draw-bar
+          mode="Drawing outline"
+          [instruction]="drawHint"
+          [finishDisabled]="!sketching()"
+          [canUndo]="sketching()"
+          (finish)="finishZone()"
+          (undo)="undoZonePoint()"
+          (cancel)="redraw()"
+        />
+      }
+      @if (area() !== null) {
+        <p class="title">≈ {{ formatArea(area()!) }}</p>
+      }
+      @if (drawn() && (problem() ?? saveError()); as message) {
+        <p class="error" role="alert">{{ message }}</p>
+      }
+      <div class="actions">
+        <button type="button" class="btn primary" [disabled]="!canSave()" (click)="save()">Save zone</button>
+        <button type="button" class="btn" (click)="redraw()">Redraw</button>
+        @if (address()) {
+          <button type="button" class="btn" (click)="backToSearch()">Search again</button>
+        }
+      </div>
+    }
+  </section>
+}
