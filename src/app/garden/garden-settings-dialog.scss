@@ -1,0 +1,168 @@
+dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.close {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 8px 0 16px;
+  border-bottom: 1px solid var(--color-border);
+
+  button {
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    cursor: pointer;
+
+    &[aria-selected='true'] {
+      color: var(--color-text);
+      border-bottom-color: var(--color-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+  }
+}
+
+.actions.start {
+  justify-content: flex-start;
+}
+
+/* Vienots vertikālais ritms visās cilnēs */
+section[role='tabpanel'] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  > p,
+  > .actions {
+    margin: 0;
+  }
+
+  > p.muted {
+    margin-top: -4px;
+  }
+}
+
+/* Dalībnieku saraksts un uzaicinājuma saite */
+.members {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .email {
+    overflow-wrap: anywhere;
+  }
+
+  .role {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--color-neutral-bg);
+    font-size: 0.75rem;
+
+    &.owner {
+      background: var(--color-success-bg);
+      color: var(--color-success-text);
+    }
+  }
+
+  .btn {
+    margin-left: auto;
+  }
+}
+
+/* Panelim jau ir 12px atstarpe, tāpēc te pieliek 4px virs sadaļas un noņem 4px līdz tekstam */
+h3 {
+  margin: 4px 0 -4px;
+  font-size: 1rem;
+}
+
+.invite-row {
+  display: flex;
+  gap: 8px;
+
+  .field {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+h3.first {
+  margin-top: 0;
+}
+
+/* Bīstamā zona ir atdalīta un sarkana cilnes apakšā */
+.address-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 0.85em;
+}
+
+.delete-row {
+  margin-top: 24px;
+}
+
+.btn.delete-link {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: transparent;
+
+  &:hover:not(:disabled) {
+    background: var(--color-error-bg);
+  }
+}
+
+/* Kompaktas pogas adreses rindā */
+.btn.small {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.address-label {
+  line-height: 32px;
+}

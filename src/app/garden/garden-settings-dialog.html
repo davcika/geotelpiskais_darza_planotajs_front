@@ -1,0 +1,134 @@
+<dialog #dialog aria-labelledby="settings-title" (cancel)="onCancel($event)">
+  <header>
+    <h2 id="settings-title">Garden settings</h2>
+    <button type="button" class="close" aria-label="Close settings" (click)="close()">×</button>
+  </header>
+  <div class="tabs" role="tablist" aria-label="Settings sections" (keydown)="tabKeys($event)">
+    @for (t of tabs(); track t.id) {
+      <button
+        type="button"
+        role="tab"
+        [id]="'settings-tab-' + t.id"
+        aria-controls="settings-panel"
+        [attr.aria-selected]="tab() === t.id"
+        [tabindex]="tab() === t.id ? 0 : -1"
+        (click)="tab.set(t.id)"
+      >{{ t.label }}</button>
+    }
+  </div>
+  <section id="settings-panel" role="tabpanel" [attr.aria-labelledby]="'settings-tab-' + tab()">
+    @switch (tab()) {
+      @case ('general') {
+        <h3 class="first">Name & icon</h3>
+        <form (ngSubmit)="saveGeneral()">
+          <label class="block">
+            Name
+            <input class="field" name="name" maxlength="100" required [(ngModel)]="name" autocomplete="off" />
+          </label>
+          <fieldset>
+            <legend>Icon</legend>
+            <div class="chips" role="radiogroup">
+              @for (key of iconKeys; track key) {
+                <label class="chip" [title]="key">
+                  <input type="radio" name="icon" [value]="key" [(ngModel)]="icon" [attr.aria-label]="key" />
+                  <span [style.background]="color + '33'">{{ icons[key] }}</span>
+                </label>
+              }
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Color</legend>
+            <div class="chips" role="radiogroup">
+              @for (c of colors; track c) {
+                <label class="chip">
+                  <input type="radio" name="color" [value]="c" [(ngModel)]="color" [attr.aria-label]="'Color ' + c" />
+                  <span [style.background]="c"></span>
+                </label>
+              }
+            </div>
+          </fieldset>
+          @if (message(); as m) {
+            <p [class.error]="m.error" role="status">{{ m.text }}</p>
+          }
+          <div class="actions">
+            <button type="submit" class="btn primary" [disabled]="!name.trim() || busy()">Save</button>
+          </div>
+        </form>
+        <div class="address-row">
+          <span class="address-label">Address: <b>{{ garden().addressLabel ?? 'not set' }}</b></span>
+          <button type="button" class="btn small" (click)="changeAddress()">Change address…</button>
+          <button type="button" class="btn small" [disabled]="!garden().hubGeometry" (click)="emitAndClose('editZone')">Edit zone on the map</button>
+        </div>
+        <p class="muted hint">Your zone is the outline of your plot. Beds, trees and items must stay inside it.</p>
+        @if (isOwner()) {
+          <div class="actions start delete-row">
+            <button type="button" class="btn delete-link" (click)="emitAndClose('delete')">Delete garden…</button>
+          </div>
+        }
+      }
+      @case ('frost') {
+        <app-frost-card [gardenId]="garden().id" [point]="frostPoint" [initial]="garden().frost ?? null" skipLabel="Close" [stayOpen]="true" (done)="close()" />
+      }
+      @case ('items') {
+        <p class="muted">Greenhouses, cold frames, fences and other items in this garden. Place them from the map.</p>
+        @if (itemsError(); as e) {
+          <p class="error" role="alert">{{ e }}</p>
+        } @else if (itemTypes() && gardenItems()) {
+          <app-items-list [types]="itemTypes()!" [items]="gardenItems()!" />
+        } @else {
+          <p class="muted">Loading…</p>
+        }
+      }
+      @case ('people') {
+        @if (membersError(); as e) {
+          <p class="error" role="alert">{{ e }}</p>
+        }
+        <ul class="members" aria-label="People with access">
+          @for (m of members(); track m.userId) {
+            <li>
+              <span class="email">{{ m.email }}</span>
+              <span class="role" [class.owner]="m.role === 'OWNER'">{{ m.role === 'OWNER' ? 'Owner' : 'Editor' }}</span>
+              @if (m.you) {
+                <span class="muted">(you)</span>
+              }
+              @if (isOwner() && m.role === 'EDITOR') {
+                <button type="button" class="btn danger" [disabled]="busy()" (click)="removeMember(m)">Remove</button>
+              }
+            </li>
+          } @empty {
+            @if (!membersError()) {
+              <li class="muted">Loading…</li>
+            }
+          }
+        </ul>
+        @if (isOwner()) {
+          <h3>Invite people</h3>
+          @if (invite(); as inv) {
+            <div class="invite-row">
+              <input #inviteInput class="field" readonly [value]="inviteUrl()" aria-label="Invite link" (focus)="inviteInput.select()" />
+              <button type="button" class="btn" (click)="copyInvite(inviteInput)">{{ copied() ? 'Copied' : 'Copy' }}</button>
+            </div>
+            <p class="muted">Anyone with this link can edit this garden · expires {{ expiry(inv.expiresAt) }}</p>
+            <div class="actions start">
+              <button type="button" class="btn" [disabled]="busy()" (click)="createInvite()">New link</button>
+              <button type="button" class="btn danger" [disabled]="busy()" (click)="revokeInvite()">Turn off link</button>
+            </div>
+          } @else {
+            <p class="muted">People you invite can change everything in this garden, except deleting it and managing people.</p>
+            <div class="actions start">
+              <button type="button" class="btn primary" [disabled]="busy()" (click)="createInvite()">Create invite link</button>
+            </div>
+          }
+        } @else {
+          <p class="muted">This garden is shared with you by {{ garden().ownerEmail }}.</p>
+          <div class="actions start">
+            <button type="button" class="btn danger" [disabled]="busy()" (click)="leave()">Leave garden</button>
+          </div>
+        }
+        @if (peopleMessage(); as m) {
+          <p [class.error]="m.error" role="status">{{ m.text }}</p>
+        }
+      }
+    }
+  </section>
+</dialog>
