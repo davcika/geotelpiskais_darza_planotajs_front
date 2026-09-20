@@ -1,0 +1,100 @@
+<header>
+  <a routerLink="/" class="btn">← Map</a>
+  <h1>Plants overview</h1>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" [class.active]="view() === 'all'" (click)="view.set('all')">Plant database</button>
+    <button type="button" role="tab" [class.active]="view() === 'garden'" (click)="view.set('garden')">In this garden</button>
+  </div>
+</header>
+
+<div class="filters">
+  <input type="search" placeholder="Search plants…" [ngModel]="search()" (ngModelChange)="search.set($event)" aria-label="Search plants" />
+  <div class="chips">
+    <button type="button" class="chip" [class.active]="category() === null" (click)="category.set(null)">All</button>
+    @for (c of categories; track c) {
+      <button type="button" class="chip" [class.active]="category() === c" (click)="category.set(category() === c ? null : c)">{{ categoryLabel[c] }}</button>
+    }
+    <button type="button" class="chip" [class.active]="favouritesOnly()" (click)="favouritesOnly.set(!favouritesOnly())">★ Favourites</button>
+  </div>
+</div>
+
+@if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted">Loading…</p> }
+@if (view() === 'garden' && !gardenLoaded()) { <p class="muted">Loading garden…</p> }
+
+<div class="table" role="table">
+  <div class="row head" role="row">
+    <span></span><span></span><span></span>
+    <button type="button" class="sort" (click)="setSort('name')">Plant {{ sortMark('name') }}</button>
+    <button type="button" class="sort num" (click)="setSort('count')">Count {{ sortMark('count') }}</button>
+    <span class="num">Spacing</span>
+    <span class="num">Spacing in rows</span>
+    <div class="th-times">
+      <span class="th-title">Planting times</span>
+      <div class="legend" aria-label="Legend">
+      <span><i class="sw indoors"></i>Indoors</span>
+      <span><i class="sw outdoors"></i>Outdoors</span>
+      <span><i class="sw harvest"></i>Harvest</span>
+      <span><i class="sw bloom"></i>Bloom</span>
+      </div>
+    </div>
+    <button type="button" class="sort" (click)="setSort('category')">Notes {{ sortMark('category') }}</button>
+  </div>
+
+  @for (r of rows(); track r.key) {
+    <div class="row" role="row">
+      <button type="button" class="icon-btn info" (click)="open(r.plant, $event)" [attr.aria-label]="'Details for ' + r.plant.nameEn">i</button>
+      <button type="button" class="icon-btn star" [class.on]="favourites().has(r.plant.id)" (click)="toggleFav(r.plant.id)"
+              [attr.aria-label]="'Favourite ' + r.plant.nameEn">{{ favourites().has(r.plant.id) ? '★' : '☆' }}</button>
+      <app-icon class="emoji" [plant]="r.plant.nameEn" [emoji]="r.plant.icon ?? '🌱'" [size]="22" />
+      <span class="name">{{ r.plant.nameEn }}@if (r.suffix) { <span class="affected">{{ r.suffix }}</span>}<small>{{ r.plant.nameLv }} · {{ categoryLabel[r.plant.category] }}</small></span>
+      <span class="num"><span class="lbl">Count </span>{{ r.count ?? '–' }}</span>
+      <span class="num"><span class="lbl">Spacing </span>{{ formatCm(r.plant.spacingCm) }}</span>
+      <span class="num"><span class="lbl">Rows </span>{{ formatSpacingPair(r.plant.spacingCm, r.plant.rowSpacingCm) }}</span>
+      <div class="timeline">
+        <div class="months">@for (m of months; track m) { <span>{{ m }}</span> }</div>
+        @for (b of r.bars; track b.kind) {
+          <div class="lane">
+            @for (s of b.segments; track $index) {
+              <i class="bar {{ b.kind }}" [style.left]="pct(s.start)" [style.width]="pct(s.end - s.start)" [title]="b.kind"></i>
+            }
+          </div>
+        }
+      </div>
+      <span class="notes muted">{{ notes(r.plant) }}</span>
+    </div>
+  } @empty {
+    @if (!loading() && !error()) { <p class="muted empty">No plants match.</p> }
+  }
+</div>
+
+@if (selected(); as p) {
+  <div class="backdrop" (click)="close()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="plant-modal-title" tabindex="-1" #modal
+       (click)="$event.stopPropagation()" (keydown)="trapFocus($event)">
+    <button type="button" class="icon-btn close" (click)="close()" aria-label="Close" #closeBtn>✕</button>
+    <h2 id="plant-modal-title"><app-icon [plant]="p.nameEn" [emoji]="p.icon ?? '🌱'" [size]="28" /> {{ p.nameEn }}</h2>
+    <p class="muted">{{ p.nameLv }} · {{ categoryLabel[p.category] }} · {{ p.family }}</p>
+    <dl>
+      <dt>Spacing</dt><dd>{{ formatCm(p.spacingCm) }} in row, {{ formatCm(p.rowSpacingCm) }} between rows</dd>
+      <dt>Sowing</dt><dd>{{ sowingHint(p) }}</dd>
+      @if (p.daysToHarvest) {
+        <dt>Harvest</dt><dd>{{ p.daysToHarvest }} days from sowing, window {{ p.harvestWindowDays ?? '–' }} days</dd>
+      }
+      @if (p.bloomFrom) {
+        <dt>Bloom</dt><dd>{{ range(p.bloomFrom, p.bloomTo) }}
+          @if (p.bloomColor) { <i class="dot" [style.background]="p.bloomColor"></i> }</dd>
+      }
+      <dt>Frost sensitive</dt><dd>{{ p.frostSensitive ? 'Yes' : 'No' }}</dd>
+      <dt>Perennial</dt><dd>{{ p.perennial ? 'Yes' : 'No' }}{{ p.evergreen ? ' · evergreen' : '' }}</dd>
+      @if (p.heightM || p.spreadM) {
+        <dt>Mature size</dt><dd>{{ p.heightM ?? '–' }} m high × {{ p.spreadM ?? '–' }} m wide
+          @if (p.yearsToMature) { (in {{ p.yearsToMature }} years) }</dd>
+      }
+      @if (p.phMin) { <dt>Soil pH</dt><dd>{{ p.phMin }} – {{ p.phMax }}</dd> }
+      @if (p.light) { <dt>Light</dt><dd>{{ lightLabel[p.light] }}</dd> }
+      @if (p.foliageFrom) { <dt>Foliage</dt><dd>{{ range(p.foliageFrom, p.foliageTo) }}</dd> }
+    </dl>
+  </div>
+  </div>
+}

@@ -1,0 +1,24 @@
+:host { display: block; max-width: 960px; margin: 0 auto; padding: 16px; }
+header { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+header h1 { margin: 0; font-size: 1.5rem; flex: 1; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: 16px; margin-bottom: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; color: var(--color-muted); }
+label.check { flex-direction: row; align-items: center; gap: 8px; color: var(--color-text); }
+input, select, textarea { font: inherit; padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text); background: var(--color-surface); }
+.btn { padding: 6px 14px; font-size: 0.875rem; }
+.btn.primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.btn.danger { color: var(--color-error); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.error { color: var(--color-error); margin: 8px 0; }
+.muted { color: var(--color-muted); font-size: 0.875rem; }
+ul.list { list-style: none; margin: 0; padding: 0; }
+ul.list li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+ul.list li .name { flex: 1; min-width: 160px; }
+.badge { font-size: 0.75rem; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--color-neutral-bg); }
+.badge.APPROVED, .badge.APPROVE { background: var(--color-success-bg); color: var(--color-success-text); }
+.badge.PENDING, .badge.FIX { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.badge.REJECTED, .badge.REJECT { background: var(--color-error-bg); color: var(--color-error); }
+.badge.PRIVATE { background: var(--color-info-bg); color: var(--color-info-text); }
+fieldset { border: none; padding: 0; margin: 12px 0 0; }
+legend { font-weight: 600; margin-bottom: 8px; }
