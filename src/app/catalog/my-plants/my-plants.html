@@ -1,0 +1,133 @@
+<header>
+  <h1>My plants</h1>
+  @if (isAdmin()) {
+    <a class="btn" routerLink="/review-plants">Review plants</a>
+  }
+  <a class="btn" routerLink="/">← Back to garden</a>
+</header>
+
+<form class="card" (ngSubmit)="save()" novalidate>
+  <h2>{{ editingId() === null ? 'Add a plant' : 'Edit plant' }}</h2>
+  <p class="muted">Dates are month-day, e.g. 05-25. Your plant is visible only to you unless you share it.</p>
+  <div class="grid">
+    <label>Name (English) <input name="nameEn" [(ngModel)]="draft.nameEn" maxlength="60" id="f-nameEn" (blur)="touch('nameEn')" [attr.aria-invalid]="shown('nameEn') ? 'true' : null" [attr.aria-describedby]="shown('nameEn') ? 'e-nameEn' : null" />
+          @if (shown('nameEn'); as m) { <span class="field-error" id="e-nameEn">{{ m }}</span> }</label>
+    <label>Name (Latvian) <input name="nameLv" [(ngModel)]="draft.nameLv" maxlength="60" id="f-nameLv" (blur)="touch('nameLv')" [attr.aria-invalid]="shown('nameLv') ? 'true' : null" [attr.aria-describedby]="shown('nameLv') ? 'e-nameLv' : null" />
+          @if (shown('nameLv'); as m) { <span class="field-error" id="e-nameLv">{{ m }}</span> }</label>
+    <label>Family (botanical, e.g. SOLANACEAE)
+      <input name="family" [(ngModel)]="draft.family" maxlength="30" id="f-family" (blur)="touch('family')" [attr.aria-invalid]="shown('family') ? 'true' : null" [attr.aria-describedby]="shown('family') ? 'e-family' : null" />
+          @if (shown('family'); as m) { <span class="field-error" id="e-family">{{ m }}</span> }
+    </label>
+    <label>Category
+      <select name="category" [(ngModel)]="draft.category">
+        @for (c of categories; track c) { <option [value]="c">{{ categoryLabels[c] }}</option> }
+      </select>
+    </label>
+    <label>Sow method
+      <select name="sowMethod" [(ngModel)]="draft.sowMethod">
+        <option value="DIRECT">Sow outdoors</option>
+        <option value="TRANSPLANT">Sow indoors, plant out</option>
+        <option value="PLANT">Plant (bulb, seedling, shrub)</option>
+      </select>
+    </label>
+  </div>
+
+  <fieldset>
+    <legend>Windows</legend>
+    <div class="grid">
+      @if (draft.sowMethod === 'TRANSPLANT') {
+        <label>Sow indoors from <input name="indoorSowFrom" [(ngModel)]="draft.indoorSowFrom" placeholder="03-01" id="f-indoorSowFrom" (blur)="touch('indoorSowFrom')" [attr.aria-invalid]="shown('indoorSowFrom') ? 'true' : null" [attr.aria-describedby]="shown('indoorSowFrom') ? 'e-indoorSowFrom' : null" />
+          @if (shown('indoorSowFrom'); as m) { <span class="field-error" id="e-indoorSowFrom">{{ m }}</span> }</label>
+        <label>Sow indoors to <input name="indoorSowTo" [(ngModel)]="draft.indoorSowTo" placeholder="04-01" id="f-indoorSowTo" (blur)="touch('indoorSowTo')" [attr.aria-invalid]="shown('indoorSowTo') ? 'true' : null" [attr.aria-describedby]="shown('indoorSowTo') ? 'e-indoorSowTo' : null" />
+          @if (shown('indoorSowTo'); as m) { <span class="field-error" id="e-indoorSowTo">{{ m }}</span> }</label>
+      }
+      <label>{{ draft.sowMethod === 'DIRECT' ? 'Sow outdoors' : 'Plant out' }} from
+        <input name="outdoorFrom" [(ngModel)]="draft.outdoorFrom" placeholder="05-25" id="f-outdoorFrom" (blur)="touch('outdoorFrom')" [attr.aria-invalid]="shown('outdoorFrom') ? 'true' : null" [attr.aria-describedby]="shown('outdoorFrom') ? 'e-outdoorFrom' : null" />
+          @if (shown('outdoorFrom'); as m) { <span class="field-error" id="e-outdoorFrom">{{ m }}</span> }
+      </label>
+      <label>… to <input name="outdoorTo" [(ngModel)]="draft.outdoorTo" placeholder="06-10" id="f-outdoorTo" (blur)="touch('outdoorTo')" [attr.aria-invalid]="shown('outdoorTo') ? 'true' : null" [attr.aria-describedby]="shown('outdoorTo') ? 'e-outdoorTo' : null" />
+          @if (shown('outdoorTo'); as m) { <span class="field-error" id="e-outdoorTo">{{ m }}</span> }</label>
+      <label>Days to harvest <input type="number" name="daysToHarvest" [(ngModel)]="draft.daysToHarvest" id="f-daysToHarvest" (blur)="touch('daysToHarvest')" [attr.aria-invalid]="shown('daysToHarvest') ? 'true' : null" [attr.aria-describedby]="shown('daysToHarvest') ? 'e-daysToHarvest' : null" />
+          @if (shown('daysToHarvest'); as m) { <span class="field-error" id="e-daysToHarvest">{{ m }}</span> }</label>
+      <label>Harvest window (days) <input type="number" name="harvestWindowDays" [(ngModel)]="draft.harvestWindowDays" id="f-harvestWindowDays" (blur)="touch('harvestWindowDays')" [attr.aria-invalid]="shown('harvestWindowDays') ? 'true' : null" [attr.aria-describedby]="shown('harvestWindowDays') ? 'e-harvestWindowDays' : null" />
+          @if (shown('harvestWindowDays'); as m) { <span class="field-error" id="e-harvestWindowDays">{{ m }}</span> }</label>
+    </div>
+    <div class="actions">
+      <label class="check"><input type="checkbox" name="frostSensitive" [(ngModel)]="draft.frostSensitive" /> Frost sensitive</label>
+      <label class="check"><input type="checkbox" name="perennial" [(ngModel)]="draft.perennial" /> Perennial</label>
+      <label class="check"><input type="checkbox" name="evergreen" [(ngModel)]="draft.evergreen" /> Evergreen</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Optional</legend>
+    <div class="grid">
+      <label>Bloom from <input name="bloomFrom" [(ngModel)]="draft.bloomFrom" id="f-bloomFrom" (blur)="touch('bloomFrom')" [attr.aria-invalid]="shown('bloomFrom') ? 'true' : null" [attr.aria-describedby]="shown('bloomFrom') ? 'e-bloomFrom' : null" />
+          @if (shown('bloomFrom'); as m) { <span class="field-error" id="e-bloomFrom">{{ m }}</span> }</label>
+      <label>Bloom to <input name="bloomTo" [(ngModel)]="draft.bloomTo" id="f-bloomTo" (blur)="touch('bloomTo')" [attr.aria-invalid]="shown('bloomTo') ? 'true' : null" [attr.aria-describedby]="shown('bloomTo') ? 'e-bloomTo' : null" />
+          @if (shown('bloomTo'); as m) { <span class="field-error" id="e-bloomTo">{{ m }}</span> }</label>
+      <label>Bloom colour <input name="bloomColor" [(ngModel)]="draft.bloomColor" placeholder="#d8577e" id="f-bloomColor" (blur)="touch('bloomColor')" [attr.aria-invalid]="shown('bloomColor') ? 'true' : null" [attr.aria-describedby]="shown('bloomColor') ? 'e-bloomColor' : null" />
+          @if (shown('bloomColor'); as m) { <span class="field-error" id="e-bloomColor">{{ m }}</span> }</label>
+      <label>Height (m) <input type="number" step="0.01" name="heightM" [(ngModel)]="draft.heightM" id="f-heightM" (blur)="touch('heightM')" [attr.aria-invalid]="shown('heightM') ? 'true' : null" [attr.aria-describedby]="shown('heightM') ? 'e-heightM' : null" />
+          @if (shown('heightM'); as m) { <span class="field-error" id="e-heightM">{{ m }}</span> }</label>
+      <label>Spread (m) <input type="number" step="0.01" name="spreadM" [(ngModel)]="draft.spreadM" id="f-spreadM" (blur)="touch('spreadM')" [attr.aria-invalid]="shown('spreadM') ? 'true' : null" [attr.aria-describedby]="shown('spreadM') ? 'e-spreadM' : null" />
+          @if (shown('spreadM'); as m) { <span class="field-error" id="e-spreadM">{{ m }}</span> }</label>
+      <label>Years to mature <input type="number" name="yearsToMature" [(ngModel)]="draft.yearsToMature" id="f-yearsToMature" (blur)="touch('yearsToMature')" [attr.aria-invalid]="shown('yearsToMature') ? 'true' : null" [attr.aria-describedby]="shown('yearsToMature') ? 'e-yearsToMature' : null" />
+          @if (shown('yearsToMature'); as m) { <span class="field-error" id="e-yearsToMature">{{ m }}</span> }</label>
+      <label>pH min <input type="number" step="0.1" name="phMin" [(ngModel)]="draft.phMin" id="f-phMin" (blur)="touch('phMin')" [attr.aria-invalid]="shown('phMin') ? 'true' : null" [attr.aria-describedby]="shown('phMin') ? 'e-phMin' : null" />
+          @if (shown('phMin'); as m) { <span class="field-error" id="e-phMin">{{ m }}</span> }</label>
+      <label>pH max <input type="number" step="0.1" name="phMax" [(ngModel)]="draft.phMax" id="f-phMax" (blur)="touch('phMax')" [attr.aria-invalid]="shown('phMax') ? 'true' : null" [attr.aria-describedby]="shown('phMax') ? 'e-phMax' : null" />
+          @if (shown('phMax'); as m) { <span class="field-error" id="e-phMax">{{ m }}</span> }</label>
+      <label>Light
+        <select name="light" [(ngModel)]="draft.light">
+          <option [ngValue]="null">—</option>
+          <option value="SUN">Sun</option>
+          <option value="PART">Part shade</option>
+          <option value="SHADE">Shade</option>
+        </select>
+      </label>
+    </div>
+  </fieldset>
+
+  <label class="check" style="margin-top: 12px">
+    <input type="checkbox" name="share" [(ngModel)]="draft.shareWithEveryone" />
+    Share with everyone (needs review)
+  </label>
+
+  @if (submitted() && errorCount() > 0) {
+    <div class="error-summary" role="alert">Fix {{ errorCount() }} {{ errorCount() === 1 ? 'field' : 'fields' }} to {{ editingId() === null ? 'add this plant' : 'save changes' }}.</div>
+  }
+  @if (error(); as message) { <div class="error" role="alert">{{ message }}</div> }
+  <div class="actions">
+    <button type="submit" class="btn primary" [disabled]="saving()">
+      {{ editingId() === null ? 'Add plant' : 'Save changes' }}
+    </button>
+    @if (editingId() !== null) { <button type="button" class="btn" (click)="cancel()">Cancel</button> }
+  </div>
+</form>
+
+<section class="card">
+  <h2>Your plants</h2>
+  @if (listError(); as message) { <p class="error" role="alert">{{ message }}</p> }
+  @if (listLoading()) {
+    <p class="muted">Loading…</p>
+  } @else if (!listError() && mine().length === 0) {
+    <p class="muted">No plants of your own yet. The shared catalog has {{ builtInCount() }} plants.</p>
+  }
+  <ul class="list">
+    @for (plant of mine(); track plant.id) {
+      <li>
+        <span class="name">
+          <strong>{{ plant.nameEn }}</strong> / {{ plant.nameLv }}
+          <br /><span class="muted">{{ plant.family }} · {{ categoryLabels[plant.category] }} · {{ sowingHint(plant) }}</span>
+          @if (plant.reviewNote) { <br /><span class="muted">Reviewer: {{ plant.reviewNote }}</span> }
+        </span>
+        <span class="badge" [class]="plant.status">{{ plant.status }}</span>
+        @if (plant.status !== 'APPROVED') {
+          <button type="button" class="btn" (click)="edit(plant)">Edit</button>
+          <button type="button" class="btn danger" (click)="remove(plant)">Delete</button>
+        }
+      </li>
+    }
+  </ul>
+</section>

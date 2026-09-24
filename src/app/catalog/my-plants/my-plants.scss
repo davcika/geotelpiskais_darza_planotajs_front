@@ -1,0 +1,4 @@
+﻿.field-error { color: var(--color-error); font-size: 0.8125rem; margin: 0; }
+input[aria-invalid='true'] { border-color: var(--color-error); background: var(--color-error-bg); }
+input[aria-invalid='true']:focus-visible { outline: 2px solid var(--color-error); outline-offset: 1px; }
+.error-summary { color: var(--color-error); background: var(--color-error-bg); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }

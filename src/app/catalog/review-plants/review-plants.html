@@ -1,0 +1,57 @@
+<header>
+  <h1>Review plants</h1>
+  <a class="btn" routerLink="/my-plants">My plants</a>
+  <a class="btn" routerLink="/">← Back to garden</a>
+</header>
+
+@if (error(); as message) { <div class="error" role="alert">{{ message }}</div> }
+@if (loaded() && pending().length === 0) { <p class="muted">Nothing to review.</p> }
+
+@for (item of pending(); track item.plant.id) {
+  <article class="card">
+    <h2>{{ item.plant.nameEn }} / {{ item.plant.nameLv }}</h2>
+    <p class="muted">Submitted by {{ item.ownerEmail ?? 'unknown' }} · {{ item.submittedAt.slice(0, 10) }}</p>
+    <p>
+      {{ item.plant.family }} · {{ item.plant.category }} · {{ sowingHint(item.plant) }}
+      @if (item.plant.daysToHarvest) { · harvest after {{ item.plant.daysToHarvest }} d for {{ item.plant.harvestWindowDays }} d }
+      @if (item.plant.bloomFrom) { · blooms {{ item.plant.bloomFrom }}–{{ item.plant.bloomTo }} }
+      @if (item.plant.heightM) { · {{ item.plant.heightM }} m tall }
+      @if (item.plant.phMin) { · pH {{ item.plant.phMin }}–{{ item.plant.phMax }} }
+      @if (item.plant.light) { · {{ item.plant.light }} }
+      {{ item.plant.frostSensitive ? '· frost sensitive' : '' }} {{ item.plant.perennial ? '· perennial' : '' }}
+    </p>
+
+    <h3>Possible duplicates</h3>
+    @if (item.similar.length === 0) {
+      <p class="muted">No similar plants in the catalog.</p>
+    } @else {
+      <ul class="list">
+        @for (s of item.similar; track s.id) {
+          <li><span class="name">{{ s.nameEn }} / {{ s.nameLv }}</span><span class="muted">similarity {{ s.score }}</span></li>
+        }
+      </ul>
+    }
+
+    <h3>AI opinion <span class="muted">(advice only)</span></h3>
+    @let r = review(item.plant.id);
+    @if (r === 'loading') {
+      <p class="muted">Asking AI…</p>
+    } @else if (r) {
+      @if (r.available) {
+        <p><span class="badge" [class]="r.verdict ?? ''">{{ r.verdict ?? 'NO VERDICT' }}</span></p>
+        <ul>
+          @for (reason of r.reasons; track $index) { <li>{{ reason }}</li> }
+        </ul>
+      } @else {
+        <p class="muted">AI unavailable: {{ r.error }}</p>
+      }
+      <button type="button" class="btn" (click)="askAi(item.plant.id)">Ask again</button>
+    }
+
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="approve(item.plant.id)">Approve</button>
+      <input [name]="'note' + item.plant.id" [(ngModel)]="notes[item.plant.id]" maxlength="500" placeholder="Reason for rejection (shown to user)" />
+      <button type="button" class="btn danger" (click)="reject(item.plant.id)">Reject</button>
+    </div>
+  </article>
+}
