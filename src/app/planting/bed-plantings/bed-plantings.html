@@ -1,0 +1,119 @@
+<section class="plantings" aria-label="Plantings">
+  <header>
+    <h2 [class.sr-only]="!showTitle()">Plantings</h2>
+    <div class="season" role="group" aria-label="Season">
+      <button type="button" class="icon" aria-label="Previous season" [disabled]="store.painting()" (click)="shiftYear(-1)">‹</button>
+      <span aria-live="polite">{{ store.year() }}</span>
+      <button type="button" class="icon" aria-label="Next season" [disabled]="store.painting()" (click)="shiftYear(1)">›</button>
+    </div>
+  </header>
+
+  @if (objectId() === undefined) {
+    <p class="muted">Saving the bed…</p>
+  } @else if (picking()) {
+    <div class="form">
+      <p class="hint" [id]="uid + '-pick-hint'">Pick a plant — it goes into the first free spot in the bed.</p>
+      <app-plant-picker [plants]="store.plants()" [loading]="store.plantsLoading()" [error]="store.plantsError()" (retry)="store.loadPlants()" actionLabel="Add" (picked)="choose($event)" />
+      <button type="button" class="btn" (click)="picking.set(false)">Cancel</button>
+    </div>
+  } @else if (draft(); as d) {
+    <div class="form">
+      @if (d.plant; as p) {
+        <div class="chosen">
+          @if (p.icon || hasIcon(p)) { <app-icon [plant]="p.nameEn" [emoji]="p.icon" [size]="20" /> } @else { <span class="dot" [style.background]="familyColor(p)"></span> }
+          <span>{{ p.nameEn }} <small>{{ p.nameLv }}</small></span>
+        </div>
+        <p class="hint" [id]="uid + '-sow-hint'">{{ sowingHint(p) }}</p>
+
+        <label>
+          {{ p.sowMethod === 'TRANSPLANT' ? 'Sown indoors on' : p.sowMethod === 'PLANT' ? 'Planted on' : 'Sown on' }}
+          <input class="field" type="date" required [value]="d.sownOn" (input)="patch({ sownOn: dateInput.value })" #dateInput
+            [attr.aria-invalid]="!d.sownOn || null"
+            [attr.aria-describedby]="uid + '-sow-hint' + (!d.sownOn ? ' ' + uid + '-date-err' : outsideWindow() ? ' ' + uid + '-date-warn' : '')" />
+        </label>
+        @if (!d.sownOn) {
+          <p class="warning" [id]="uid + '-date-err'" role="alert">Enter a date.</p>
+        } @else if (outsideWindow()) {
+          <p class="warning" [id]="uid + '-date-warn'">This date is outside the recommended {{ p.sowMethod === 'PLANT' ? 'planting' : 'sowing' }} time.</p>
+        }
+        <label>
+          <span>Variety <span class="muted">(optional)</span></span>
+          <input class="field" maxlength="60" [value]="d.variety" (input)="patch({ variety: varietyInput.value })" #varietyInput />
+        </label>
+        <label>
+          <span>Note <span class="muted">(optional)</span></span>
+          <input class="field" maxlength="200" [value]="d.note" (input)="patch({ note: noteInput.value })" #noteInput />
+        </label>
+        <div class="actions">
+          <button type="button" class="btn primary" [disabled]="!d.sownOn" (click)="save()">Save</button>
+          <button type="button" class="btn" (click)="draft.set(null)">Cancel</button>
+        </div>
+      }
+    </div>
+  } @else {
+    @if (areaM2(); as bedM2) {
+      <app-space-bar [usedM2]="usedM2()" [bedM2]="bedM2" />
+    }
+    <app-bed-companions [plantIds]="plantIds()" [names]="store.plantById()" />
+    <ul class="list">
+      @for (planting of plantings(); track planting.id) {
+        <li>
+          @if (plant(planting); as pl) {
+            <app-icon class="plant-icon" [plant]="pl.nameEn" [emoji]="pl.icon ?? '🌱'" [size]="20" />
+          } @else {
+            <span class="dot" [style.background]="familyColor(plant(planting))"></span>
+          }
+          <span class="what">
+            {{ plant(planting)?.nameEn }}
+            @if (badNames(planting); as bad) {
+              <span class="nb bad" [title]="'Bad neighbour: ' + bad" aria-hidden="true">⚠</span>
+              <span class="sr-only">Bad neighbour: {{ bad }}</span>
+            } @else if (goodNames(planting); as good) {
+              <span class="nb good" [title]="'Good neighbour: ' + good" aria-hidden="true">✓</span>
+              <span class="sr-only">Good neighbour: {{ good }}</span>
+            }
+            @if (planting.variety) {
+              <small>‘{{ planting.variety }}’</small>
+            }
+            <small class="muted">{{ formatDate(planting.sownOn) }}</small>
+            @if (effectOf(planting); as eff) {
+              <span class="item-effects">
+                @for (a of eff.affectedBy; track a.itemId) {
+                  <app-item-badge [icon]="a.icon" [typeKey]="a.typeKey" [name]="a.name" />
+                }
+                @if (plant(planting); as pl) {
+                  @if (shiftedHint(pl, eff); as h) {
+                    <small class="muted">{{ h }}</small>
+                  }
+                }
+              </span>
+            }
+          </span>
+          <app-packet-photos class="photos" [plantingId]="planting.id" />
+          @if (store.painting()?.plantingId === planting.id) {
+            <button type="button" class="btn primary small" (click)="store.finishPaint()">Done</button>
+          } @else if (!store.painting()) {
+            @if (paintable() && planting.cells.length) {
+              <button type="button" class="btn small" [attr.aria-label]="'Edit painted cells for ' + plant(planting)?.nameEn" (click)="store.startPaint(planting)">
+                Cells · {{ planting.cells.length }}
+              </button>
+            }
+            <button type="button" class="link" (click)="startEdit(planting)">Edit</button>
+            <button type="button" class="link" [attr.aria-label]="'Remove ' + plant(planting)?.nameEn" (click)="remove(planting)">✕</button>
+          }
+        </li>
+      } @empty {
+        <li class="muted">Nothing planted in {{ store.year() }}</li>
+      }
+    </ul>
+    @if (store.painting()) {
+      <p class="hint">Click or drag over the grid to fill cells. Click a filled cell to clear it.</p>
+    } @else {
+      <button type="button" class="btn" (click)="startAdd()">+ Add planting</button>
+    }
+    @if (notice(); as n) {
+      <p class="hint" role="status">{{ n }}</p>
+    }
+  }
+</section>
+<app-planting-undo-snackbar />
