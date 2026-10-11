@@ -1,0 +1,244 @@
+<header class="top">
+  <a class="btn" routerLink="/">← Map</a>
+  @if (!notFound()) {
+    <input class="title" aria-label="Bed name" [value]="name()" #nameInput (change)="onNameChange(nameInput.value)" />
+  }
+</header>
+
+@if (api.error() ?? plantings.error(); as message) {
+  <div class="error" role="alert">{{ message }}</div>
+}
+
+@if (notFound()) {
+  <p class="empty">This bed does not exist. <a routerLink="/">Back to the map</a></p>
+} @else if (grid(); as g) {
+  <main class="layout">
+    <!-- Kreisā kolonna ar paletēm, aktīvā slāņa sadaļa ir pirmā un izcelta -->
+    <aside class="col left">
+      <section class="card palette" [class.active]="layer() === 'plants'" aria-label="Plants" data-tour="bed-palette">
+        <h2>Plants</h2>
+        <p class="hint">Drag a plant onto the bed, or click to place it in the first free spot.</p>
+        <app-plant-picker [plants]="plantings.plants()" [loading]="plantings.plantsLoading()" [error]="plantings.plantsError()" (retry)="plantings.loadPlants()" [draggable]="true" actionLabel="Place in the bed:" maxHeight="45vh"
+          (pressed)="startPaletteDrag($event.plant, $event.event)" (picked)="placeAnywhere($event)" />
+      </section>
+
+      <section class="card covers" [class.active]="layer() === 'protection'" aria-label="Season protection">
+        <h2>Protection</h2>
+        <p class="hint">Drag a greenhouse, cold frame or fleece onto the bed (or click to cover the middle). Plants underneath can go out earlier.</p>
+        @for (r of itemRects(); track r.item.id) {
+          <p class="cover-row"><app-icon [item]="r.type.key" [emoji]="r.type.icon" [size]="20" /> {{ r.name }}
+            <button type="button" class="link" [attr.aria-label]="'Remove ' + r.name" (click)="removeItem(r.item, r.name)">✕</button></p>
+        }
+        <app-item-palette [types]="protectionTypes()" (picked)="placeItemCenter($event)" />
+      </section>
+    </aside>
+
+    <section class="card editor" aria-label="Bed planner">
+      @if (frame(); as f) {
+        <div class="toolbar">
+          <div class="segmented" role="radiogroup" aria-label="Edit layer">
+            <button type="button" role="radio" [attr.aria-checked]="layer() === 'plants'" [class.on]="layer() === 'plants'" (click)="setLayer('plants')">Plants</button>
+            <button type="button" role="radio" [attr.aria-checked]="layer() === 'protection'" [class.on]="layer() === 'protection'" (click)="setLayer('protection')">Protection</button>
+          </div>
+          <details class="info">
+            <summary aria-label="How to edit the bed" title="How to edit the bed">?</summary>
+            <p>{{ f.rot ? 'Rotated ' + f.rot + '° to align the bed.' : 'North is up.' }}
+              {{ plantings.painting() ? 'Click or drag to fill cells, then press Done.'
+                : layer() === 'plants' ? 'Drag a block to move it, drag its handles to resize. Arrow keys move the selected block, Shift + arrows resize, Delete removes. Blocks snap to the 5 cm grid; size grows by one plant spacing.'
+                : 'Drag a cover by its edge or label. Arrow keys move the selected cover by 5 cm, Delete removes it.' }}</p>
+          </details>
+        </div>
+        <div class="meta">
+          <span>{{ f.size }}</span>
+          <span>{{ f.area }}</span>
+          @if (hasLegacyCells()) {
+            <span>Cell ≈ {{ g.cellW.toFixed(2) }} × {{ g.cellH.toFixed(2) }} m</span>
+          }
+        </div>
+        <div data-tour="bed-space"><app-space-bar [usedM2]="usedM2()" [bedM2]="f.areaM2" /></div>
+        <p class="sr-only" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
+        <div class="plan-wrap">
+        @if (notice(); as n) {
+          <p class="warning plan-notice" role="status" [class.invalid]="drag() && !drag()!.valid">{{ n }}</p>
+        }
+        <svg
+          #svg
+          class="grid"
+          [class.dragging]="drag()"
+          [class.painting]="plantings.painting()"
+          [class.layer-plants]="layer() === 'plants'"
+          [class.layer-protection]="layer() === 'protection'"
+          [attr.viewBox]="f.viewBox"
+          preserveAspectRatio="xMidYMid meet"
+          (dragover)="onItemDragOver($event)"
+          (drop)="onItemDrop($event)"
+          role="group"
+          aria-roledescription="bed planner"
+          [attr.aria-label]="name() + ', ' + f.size + '. ' + blocks().length + (layer() === 'plants' ? ' plant blocks. Tab to a block; arrow keys move it, Shift + arrows resize, Delete removes.' : ' covers. Tab to a cover; arrow keys move it, Delete removes.')"
+        >
+          <defs>
+            <clipPath id="bed-clip-{{ id }}"><polygon [attr.points]="f.outline" /></clipPath>
+          </defs>
+          <g #content>
+          <polygon class="outline" aria-hidden="true" [attr.points]="f.outline" />
+          <path class="base-grid" aria-hidden="true" [attr.d]="baseGrid()" [attr.clip-path]="'url(#bed-clip-' + id + ')'" />
+          @for (c of cells(); track c.key) {
+            <g aria-hidden="true" (pointerdown)="onCellDown(c, $event)" (pointerenter)="onCellEnter(c)">
+              <rect
+                [attr.x]="c.x"
+                [attr.y]="c.y"
+                [attr.width]="g.cellW"
+                [attr.height]="g.cellH"
+                [class.filled]="c.color"
+                [class.mine]="c.mine"
+                [attr.fill]="c.color ?? 'transparent'"
+              />
+              @if (c.label) {
+                <text [attr.x]="c.x + g.cellW / 2" [attr.y]="c.y + g.cellH / 2" [attr.font-size]="Math.min(g.cellW, g.cellH) * 0.35">
+                  {{ c.label }}
+                </text>
+              }
+            </g>
+          }
+          @for (b of blocks(); track b.planting.id; let first = $first) {
+            <g class="block" [attr.data-tour]="first ? 'bed-block' : null" [class.selected]="b.planting.id === selectedId()" [class.over]="b.count > b.fits"
+              [attr.tabindex]="layer() === 'plants' ? 0 : -1" role="button"
+              [attr.aria-label]="b.description" [attr.aria-pressed]="b.planting.id === selectedId()"
+              [class.invalid]="b.invalid"
+              (focus)="selectedId.set(b.planting.id)" (keydown)="onBlockKey(b, $event)">
+              <title>{{ b.label }}</title>
+              <rect class="area" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h"
+                [attr.fill]="b.color + '33'" [attr.stroke]="b.color" aria-hidden="true" (pointerdown)="startBlockDrag(b, 'move', $event)" />
+              @if (b.gridPath) {
+                <path class="cell-lines" aria-hidden="true" [attr.d]="b.gridPath" [attr.stroke]="b.color" />
+              }
+              <g aria-hidden="true">
+              @for (pt of b.points; track $index) {
+                @if (b.circleR) {
+                  <circle class="spread" [attr.cx]="pt[0]" [attr.cy]="pt[1]" [attr.r]="b.circleR" [attr.fill]="b.color + '40'" />
+                }
+                @if (b.iconUrl) {
+                  <image class="plant-icon" [attr.href]="b.iconUrl" [attr.x]="pt[0] - b.iconSize / 2" [attr.y]="pt[1] - b.iconSize / 2" [attr.width]="b.iconSize" [attr.height]="b.iconSize" />
+                } @else if (b.icon) {
+                  <text class="plant-icon" [attr.x]="pt[0]" [attr.y]="pt[1]" [attr.font-size]="b.iconSize">{{ b.icon }}</text>
+                } @else {
+                  <circle class="plant-dot" [attr.cx]="pt[0]" [attr.cy]="pt[1]" [attr.r]="b.iconSize / 3" [attr.fill]="b.color" />
+                }
+              }
+              </g>
+              @if (b.shortLabel) {
+                <text class="block-label" aria-hidden="true" [attr.x]="b.x + b.w / 2" [attr.y]="b.y + b.labelSize * 1.05" [attr.font-size]="b.labelSize">{{ b.shortLabel }}</text>
+              }
+              @if (b.invalid) {
+                <rect class="invalid-tint" aria-hidden="true" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h" />
+              }
+              @if (b.planting.id === selectedId()) {
+                @for (h of handlesFor(b); track h) {
+                  <g class="handle-wrap" [attr.data-handle]="h" aria-hidden="true" (pointerdown)="startBlockDrag(b, h, $event)">
+                    <!-- Neredzams lielāks laukums, lai rokturi vieglāk trāpīt -->
+                    <rect class="handle-hit"
+                      [attr.x]="handlePos(b, h)[0] - hitM() / 2" [attr.y]="handlePos(b, h)[1] - hitM() / 2"
+                      [attr.width]="hitM()" [attr.height]="hitM()" />
+                    <rect class="handle"
+                      [attr.x]="handlePos(b, h)[0] - handleM() / 2" [attr.y]="handlePos(b, h)[1] - handleM() / 2"
+                      [attr.width]="handleM()" [attr.height]="handleM()" [attr.rx]="handleM() * 0.2" />
+                  </g>
+                }
+              }
+            </g>
+          }
+          <!-- Siltumnīcas un lecekti virs dobes kā caurspīdīgs stikls, kas klikšķus neaiztur -->
+          <g [attr.clip-path]="'url(#bed-clip-' + id + ')'">
+          @for (r of itemRects(); track r.item.id) {
+            <!-- Velk aiz malas vai uzraksta, iekšpuse klikšķus laiž cauri uz blokiem -->
+            <g class="cover" [class.dragging]="itemDrag()?.id === r.item.id" [class.selected]="r.item.id === selectedItemId()"
+              [attr.tabindex]="layer() === 'protection' ? 0 : null" [attr.role]="layer() === 'protection' ? 'button' : null"
+              [attr.aria-hidden]="layer() === 'protection' ? null : 'true'" [attr.aria-label]="r.name"
+              (focus)="selectedItemId.set(r.item.id)" (keydown)="onItemKey(r.item, r.type, r.name, $event)">
+              <polygon [attr.points]="r.points" pointer-events="none" />
+              <polygon class="cover-grip" [attr.points]="r.points"
+                (pointerdown)="startItemDrag(r.item, r.type, $event)" />
+              @let fs = Math.min(f.handle * 0.7, r.h * 0.3, r.w / Math.max(4, r.name.length + 2) * 1.6);
+              @let coverIcon = itemIcon(r.type.key);
+              @if (coverIcon) {
+                <image class="cover-icon" [attr.href]="coverIcon" [attr.x]="r.x + fs * 0.4" [attr.y]="r.y + fs * 0.25" [attr.width]="fs * 1.1" [attr.height]="fs * 1.1"
+                  (pointerdown)="startItemDrag(r.item, r.type, $event)" />
+              }
+              <text class="cover-label" [attr.x]="r.x + fs * (coverIcon ? 1.7 : 0.4)" [attr.y]="r.y + fs * 1.15" [attr.font-size]="fs"
+                (pointerdown)="startItemDrag(r.item, r.type, $event)">{{ coverIcon ? '' : r.type.icon + ' ' }}{{ r.name }}</text>
+            </g>
+          }
+          </g>
+          <polygon class="outline top" aria-hidden="true" [attr.points]="f.outline" />
+          </g>
+        </svg>
+        </div>
+        @if (layer() === 'plants' && selected(); as b) {
+          <form class="block-form" aria-label="Selected block" (submit)="$event.preventDefault()">
+            <strong><app-icon [plant]="b.plant?.nameEn" [emoji]="b.plant?.icon" [size]="20" /> {{ b.plant?.nameEn }}</strong>
+            <label>Columns <input class="field" type="number" step="1" min="1" [value]="b.cols" #fcc (change)="onCellsInput(b, fcc.valueAsNumber, b.rows)"
+              aria-describedby="block-fits" /></label>
+            <label>Rows <input class="field" type="number" step="1" min="1" [value]="b.rows" #fcr (change)="onCellsInput(b, b.cols, fcr.valueAsNumber)"
+              aria-describedby="block-fits" /></label>
+            <span id="block-fits" class="fits">= {{ b.count }} {{ b.count === 1 ? 'plant' : 'plants' }} · {{ cm(cellW(b)) }} × {{ cm(cellH(b)) }} cm each</span>
+            <button type="button" class="btn" (click)="removeBlock(b)">Remove</button>
+            <details class="size">
+              <summary>Edit size…</summary>
+              <div class="size-fields">
+                <label>X cm <input class="field" type="number" step="5" min="0" [value]="cm(b.block.x)" #fx (change)="onFormInput(b, 'x', fx.valueAsNumber)" aria-describedby="block-xy-hint" /></label>
+                <label>Y cm <input class="field" type="number" step="5" min="0" [value]="cm(b.block.y)" #fy (change)="onFormInput(b, 'y', fy.valueAsNumber)" aria-describedby="block-xy-hint" /></label>
+                <label>Width cm <input class="field" type="number" step="5" min="5" [value]="cm(b.block.w)" #fw (change)="onFormInput(b, 'w', fw.valueAsNumber)" /></label>
+                <label>Length cm <input class="field" type="number" step="5" min="5" [value]="cm(b.block.h)" #fh (change)="onFormInput(b, 'h', fh.valueAsNumber)" /></label>
+                <p class="hint" id="block-xy-hint">X, Y from the bed's lower-left corner (as shown above).</p>
+              </div>
+            </details>
+          </form>
+        }
+      }
+    </section>
+
+    <!-- Labā kolonna ar sakļaujamiem stādījumiem un augsni -->
+    <aside class="col side">
+      @if (hasLegacyCells()) {
+      <section class="card">
+        <fieldset class="divisions" [disabled]="locked()">
+          <legend>Grid</legend>
+          <label>
+            Columns
+            <input class="field" #colsInput type="number" min="1" [max]="maxDivisions" step="1" [value]="g.cols"
+              (change)="onGridInput(colsInput.valueAsNumber, rowsInput.valueAsNumber)" />
+          </label>
+          <span class="times" aria-hidden="true">×</span>
+          <label>
+            Rows
+            <input class="field" #rowsInput type="number" min="1" [max]="maxDivisions" step="1" [value]="g.rows"
+              (change)="onGridInput(colsInput.valueAsNumber, rowsInput.valueAsNumber)" />
+          </label>
+        </fieldset>
+        @if (locked()) {
+          <p class="hint">Remove this season's plant blocks and painted cells to change the grid.</p>
+        }
+      </section>
+      }
+
+      <app-collapsible-section class="card section-card" id="bed-plantings" title="Plantings" [autoOpen]="true"
+        [summary]="plantings.year() + ' · ' + blocks().length + (blocks().length === 1 ? ' block' : ' blocks')">
+        <app-bed-plantings [objectId]="id" [geometry]="g.geometry" [paintable]="hasLegacyCells()" [effects]="effects()" [showTitle]="false" />
+      </app-collapsible-section>
+
+      <app-collapsible-section class="card section-card" id="bed-soil" title="Soil">
+        <app-soil-card [objectId]="id" [year]="plantings.year()" />
+      </app-collapsible-section>
+    </aside>
+  </main>
+} @else if (loadFailed()) {
+  <p class="empty" role="alert">Could not load the bed. <button type="button" class="btn" (click)="load()">Retry</button></p>
+} @else {
+  <p class="empty" role="status">Loading…</p>
+}
+
+@if (ghost(); as gh) {
+  <div class="ghost" aria-hidden="true" [class.invalid]="gh.invalid" [style.left.px]="gh.x" [style.top.px]="gh.y">
+    <app-icon [plant]="gh.plant.nameEn" [emoji]="gh.plant.icon ?? '🌱'" [size]="20" /> {{ gh.plant.nameEn }}{{ gh.invalid ? ' — ' + gh.invalid : '' }}
+  </div>
+}
