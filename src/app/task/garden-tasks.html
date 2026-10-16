@@ -1,0 +1,106 @@
+<section class="block" aria-labelledby="tasks-title">
+  <header>
+    <h2 id="tasks-title">To do</h2>
+    @if (tasks().length) {
+      <button type="button" class="link" (click)="showAll.set(!showAll())">
+        {{ showAll() ? 'Show current only' : 'Show all (' + tasks().length + ')' }}
+      </button>
+    }
+  </header>
+
+  @if (!formOpen() && error(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (loadFailed()) {
+    <button type="button" class="btn" [disabled]="busy()" (click)="retry()">Retry</button>
+  } @else if (loaded() && tasks().length === 0) {
+    <p class="muted">No tasks yet. Add your own or start with common seasonal jobs (mowing, hedge trimming, whitewashing trees…).</p>
+    <button type="button" class="btn add" [disabled]="busy()" (click)="addDefaults()">Add recommended tasks</button>
+  } @else if (loaded() && visible().length === 0) {
+    <p class="muted">Nothing to do right now{{ hiddenCount() ? ' · ' + hiddenCount() + ' later' : '' }}.</p>
+  }
+
+  <ul class="tasks">
+    @for (task of visible(); track task.id) {
+      <li [class]="task.status.toLowerCase()" [class.disabled]="!task.enabled">
+        <div class="main">
+          <span class="title">{{ task.title }}</span>
+          <span class="meta">
+            <span class="badge">{{ task.enabled ? statusLabel(task) : 'Off' }}</span>
+            @if (dueText(task); as due) { <span>{{ due }}</span> }
+            <span>· {{ schedule(task) }}</span>
+            @if (lastDone(task); as last) { <span>· {{ last }}</span> }
+          </span>
+          @if (task.note) { <span class="note">{{ task.note }}</span> }
+        </div>
+        <div class="actions">
+          @if (task.enabled && task.status !== 'DONE') {
+            <button type="button" class="btn done" [disabled]="busy()" (click)="done(task)" [attr.aria-label]="doneLabel(task) + ': ' + task.title">{{ doneLabel(task) }}</button>
+          }
+          @if (showAll()) {
+            <button type="button" class="link" [disabled]="busy()" (click)="toggle(task)">{{ task.enabled ? 'Turn off' : 'Turn on' }}</button>
+            <button type="button" class="link" [disabled]="busy()" (click)="remove(task)" [attr.aria-label]="'Delete ' + task.title">Delete</button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (formOpen()) {
+    <form class="form" (ngSubmit)="save()" novalidate>
+      @if (error(); as message) {
+        <p class="error" id="task-form-error" role="alert">{{ message }}</p>
+      }
+      <label class="stack">
+        <span>Task</span>
+        <input class="field" name="title" [(ngModel)]="draft.title" required maxlength="100" placeholder="e.g. Water the hedge" [attr.aria-invalid]="titleMissing() || null" [attr.aria-describedby]="describedBy('title')" />
+      </label>
+      @if (titleMissing()) {
+        <p class="error small" id="task-title-error">Give the task a name.</p>
+      }
+      <fieldset>
+        <legend>Repeat</legend>
+        <div class="segmented">
+          <label><input type="radio" name="kind" value="ONCE" [(ngModel)]="draft.kind" /><span>One-off</span></label>
+          <label><input type="radio" name="kind" value="EVERY_N_DAYS" [(ngModel)]="draft.kind" /><span>Every N days</span></label>
+          <label><input type="radio" name="kind" value="YEARLY" [(ngModel)]="draft.kind" /><span>Every year</span></label>
+        </div>
+      </fieldset>
+      @switch (draft.kind) {
+        @case ('ONCE') {
+          <label class="stack"><span>Date</span><input class="field" type="date" name="dueDate" [attr.aria-describedby]="describedBy('other')" [(ngModel)]="draft.dueDate" required /></label>
+        }
+        @case ('EVERY_N_DAYS') {
+          <div class="row">
+            <label class="stack"><span>Every (days)</span><input class="field" type="number" name="interval" [attr.aria-describedby]="describedBy('other')" min="1" max="3650" [(ngModel)]="draft.intervalDays" required /></label>
+            <label class="stack"><span>Last done (optional)</span><input class="field" type="date" name="lastDone" [attr.aria-describedby]="describedBy('other')" [(ngModel)]="draft.lastDoneOn" /></label>
+          </div>
+        }
+        @case ('YEARLY') {
+          <div class="row">
+            <label class="stack"><span>From</span><input class="field" type="date" name="from" [attr.aria-describedby]="describedBy('other')" [(ngModel)]="draft.from" required /></label>
+            <label class="stack"><span>To</span><input class="field" type="date" name="to" [attr.aria-describedby]="describedBy('other')" [(ngModel)]="draft.to" required /></label>
+          </div>
+          <p class="muted small">Only day and month are used; repeats every year.</p>
+        }
+      }
+      <label class="stack"><span>Note</span><input class="field" name="note" [attr.aria-describedby]="describedBy('other')" [(ngModel)]="draft.note" maxlength="300" /></label>
+      <div class="form-actions">
+        <button type="submit" class="btn primary" [disabled]="busy()">Add task</button>
+        <button type="button" class="link" (click)="formOpen.set(false)">Cancel</button>
+      </div>
+    </form>
+  } @else {
+    <div class="adders">
+      <button type="button" class="link add" (click)="formOpen.set(true)">+ Add task</button>
+      @if (tasks().length) {
+        <button type="button" class="link" (click)="addDefaults()">+ Recommended tasks</button>
+      }
+    </div>
+  }
+
+  @if (recommendedOpen()) {
+    <app-recommended-tasks-dialog (added)="onRecommendedAdded()" (closed)="recommendedOpen.set(false)" />
+  }
+</section>

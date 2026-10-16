@@ -1,0 +1,40 @@
+.list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+label {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  &:hover { background: var(--color-bg); }
+  &.added { cursor: default; opacity: 0.6; }
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: var(--color-primary);
+    flex-shrink: 0;
+  }
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+}
+
+.title {
+  font-weight: 500;
+}
+
+.text .muted {
+  font-size: 12px;
+}

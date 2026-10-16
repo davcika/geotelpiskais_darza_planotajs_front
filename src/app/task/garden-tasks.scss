@@ -1,0 +1,233 @@
+:host {
+  display: block;
+}
+
+.block {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.link {
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.add {
+  justify-self: start;
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.small {
+  font-size: 12px;
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+}
+
+.tasks {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-neutral-bg);
+
+  /* Krāsains fons līdz pat kartītes labajai malai */
+  &.overdue { border-left-color: var(--color-error); background: var(--color-error-bg); }
+  &.due { border-left-color: var(--color-success); background: var(--color-success-bg); }
+  &.upcoming { border-left-color: var(--color-warning); background: var(--color-warning-bg); }
+  &.disabled { opacity: 0.55; }
+}
+
+.main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 500;
+}
+
+.meta,
+.note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.badge {
+  font-weight: 600;
+}
+
+.overdue .badge { color: var(--color-error); }
+.due .badge { color: var(--color-success); }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+
+.form {
+  display: grid;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.stack {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+
+  .field {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    font-weight: 400;
+    font-size: 15px;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+fieldset {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    padding: 0;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+/* Radio grupa kā segmentu vadīkla */
+.segmented {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  background: var(--color-bg);
+
+  label {
+    position: relative;
+    flex: 1;
+    cursor: pointer;
+  }
+
+  input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  span {
+    display: grid;
+    place-items: center;
+    min-height: 36px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--color-muted);
+  }
+
+  input:checked + span {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+
+  input:focus-visible + span {
+    outline: 3px solid rgba(45, 106, 61, 0.3);
+  }
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 2px;
+
+  .link {
+    font-size: 14px;
+  }
+}
+
+.adders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Sakļaujamā sadaļā virsraksts jau ir sadaļas galvenē */
+:host-context(app-collapsible-section) {
+  .block { padding: 0; background: none; }
+  h2 { display: none; }
+  header { justify-content: flex-end; }
+}
+
+/* Done poga vismaz 44 px, lai ērti trāpīt ar pirkstu */
+.btn.done {
+  min-height: 44px;
+  min-width: 72px;
+  padding: 0 16px;
+}
