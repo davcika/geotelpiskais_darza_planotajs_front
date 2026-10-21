@@ -1,0 +1,83 @@
+<!-- Augšā tas, kas jādara tagad, zemāk sezona un dobes -->
+<a class="today-card" routerLink="/today">
+  <span class="today-icon" aria-hidden="true">☀</span>
+  <span class="today-text">
+    <span class="today-title">Today</span>
+    <span class="today-sub">What to do and sow now</span>
+  </span>
+  <span class="today-chevron" aria-hidden="true">›</span>
+</a>
+
+<app-collapsible-section [title]="'To do'" [summary]="tasksSummary()" [autoOpen]="tasksAttention()" id="tasks" tourId="section-tasks">
+  <app-garden-tasks (summaryChange)="tasksSummary.set($event)" (attentionChange)="tasksAttention.set($event)" />
+</app-collapsible-section>
+
+@if (beds().length === 0) {
+  <div class="empty">
+    <p class="empty-title">Start by drawing your first bed</p>
+    <p class="muted">Outline a vegetable bed on the map, then add what you plant in it.</p>
+    <button type="button" class="btn primary" (click)="addBed.emit()">+ Draw a bed</button>
+  </div>
+}
+
+<app-collapsible-section [title]="'Season ' + year()" [summary]="seasonSummary()" id="season" tourId="section-season">
+  <div class="inner">
+    <div class="stats">
+      <div class="stat">
+        <span class="value">{{ totals().plantedBeds }}/{{ totals().beds }}</span>
+        <span class="label">beds planted</span>
+      </div>
+      <div class="stat">
+        <span class="value">{{ area(totals().plantedArea) }}</span>
+        <span class="label">of {{ area(totals().area) }} in use</span>
+      </div>
+      <div class="stat">
+        <span class="value">{{ totals().crops }}</span>
+        <span class="label">different crops</span>
+      </div>
+    </div>
+
+    @if (families().length) {
+      <div class="families" role="img" [attr.aria-label]="'Plant families: ' + families().map((f) => f.family + ' ' + f.count).join(', ')">
+        @for (f of families(); track f.family) {
+          <span class="segment" [style.flex-grow]="f.share" [style.background]="f.color"></span>
+        }
+      </div>
+      <ul class="legend">
+        @for (f of families(); track f.family) {
+          <li><span class="dot" [style.background]="f.color"></span>{{ f.family }} · {{ f.count }}</li>
+        }
+      </ul>
+    }
+  </div>
+</app-collapsible-section>
+
+<app-collapsible-section [title]="'Beds'" [summary]="bedsSummary()" id="beds" tourId="section-beds">
+  <div class="inner">
+    <ul class="beds">
+      @for (bed of beds(); track bed.id) {
+        <li>
+          <button type="button" class="bed" [class.selected]="bed.id === selectedId()" (click)="pick.emit(bed.id)">
+            <span class="name">{{ bed.name }}</span>
+            <span class="muted">{{ area(bed.areaM2) }}</span>
+            <span class="plants">
+              @for (plant of bed.plants; track plant.name) {
+                <span class="chip"><span class="dot" [style.background]="plant.color"></span>{{ plant.name }}</span>
+              } @empty {
+                <span class="muted">Nothing planted</span>
+              }
+            </span>
+            <!-- Aizņemto vietu aprēķina planting/bed-blocks.ts -->
+            @if (bed.usedM2 > 0) {
+              <app-space-bar [usedM2]="bed.usedM2" [bedM2]="bed.areaM2" [compact]="true" />
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </div>
+</app-collapsible-section>
+
+<app-collapsible-section [title]="'Assistant'" summary="Ask about your garden" id="assistant" tourId="section-assistant">
+  <app-garden-assistant [year]="year()" />
+</app-collapsible-section>

@@ -1,0 +1,71 @@
+<main class="today">
+  <header class="top">
+    <a class="back" routerLink="/" aria-label="Back to the map">‹ Map</a>
+    <h1>Today</h1>
+    <p class="date">{{ heading }}{{ garden() ? ' · ' + garden()!.name : '' }}</p>
+  </header>
+
+  @if (frostNote(); as note) {
+    <p class="note frost" role="note">❄ {{ note }}</p>
+  }
+  @if (firstFrostNote(); as note) {
+    <p class="note frost" role="note">❄ {{ note }}</p>
+  }
+
+  <section aria-labelledby="today-tasks">
+    <h2 id="today-tasks">To do now</h2>
+    @if (store.error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+    @if (!store.loaded()) {
+      <p class="muted">Loading…</p>
+    } @else if (store.loadFailed()) {
+      <button type="button" class="done" [disabled]="store.busy()" (click)="retryTasks()">Retry</button>
+    } @else {
+      <ul class="tasks">
+        @for (task of tasks(); track task.id) {
+          <li [class.overdue]="task.status === 'OVERDUE'">
+            <div class="main">
+              <span class="title">{{ task.title }}</span>
+              <span class="meta">{{ task.status === 'OVERDUE' ? 'Overdue' : 'Due now' }}@if (dueText(task); as due) { · {{ due }} }</span>
+              @if (task.note) { <span class="muted">{{ task.note }}</span> }
+            </div>
+            <button type="button" class="done" [disabled]="store.busy()" (click)="store.done(task)" [attr.aria-label]="doneLabel(task) + ': ' + task.title">
+              ✓ {{ doneLabel(task) }}
+            </button>
+          </li>
+        } @empty {
+          <li class="empty">Nothing overdue or due today. 🌱</li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section aria-labelledby="today-sow">
+    <h2 id="today-sow">Sow / plant this week</h2>
+    @if (!plantsLoaded()) {
+      <p class="muted">Loading…</p>
+    } @else if (plantsError(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+      <button type="button" class="done" (click)="retryPlants()">Retry</button>
+    } @else {
+      <ul class="sow">
+        @for (s of sow(); track s.plant.id) {
+          <li>
+            <app-icon class="icon" [plant]="s.plant.nameEn" [emoji]="s.plant.icon || '🌱'" [size]="24" />
+            <div class="main">
+              <span class="title">{{ s.plant.nameEn }}@if (s.used) { <span class="badge">in your garden</span> }</span>
+              <span class="meta">{{ s.where === 'indoors' ? 'Sow indoors' : s.plant.sowMethod === 'DIRECT' ? 'Sow outdoors' : 'Plant out' }} · until {{ until(s.until) }}</span>
+            </div>
+            <a class="add" routerLink="/" [attr.aria-label]="'Open map to plant ' + s.plant.nameEn">Open map</a>
+          </li>
+        } @empty {
+          <li class="empty">Nothing to sow this week. See the <a routerLink="/plants">plant calendar</a>.</li>
+        }
+      </ul>
+      @if (sow().length) {
+        <a class="more" routerLink="/plants">All plants and sowing times ›</a>
+      }
+    }
+  </section>
+</main>
