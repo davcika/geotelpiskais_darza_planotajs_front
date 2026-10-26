@@ -1,0 +1,16 @@
+.soil { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+h2 { font-size: 1rem; margin: 0; }
+h3 { font-size: 0.9rem; margin: 8px 0 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
+label { display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; }
+label.toggle { flex-direction: row; align-items: center; gap: 6px; }
+.muted { color: var(--color-muted); font-size: 0.85rem; margin: 0; }
+.warning { color: #a4441c; font-size: 0.85rem; }
+.fit { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
+.fit small { display: block; color: var(--color-muted); }
+.badge { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; color: #fff; }
+.badge.GOOD { background: var(--color-success); }
+.badge.OK { background: var(--color-warning); }
+.badge.POOR { background: var(--color-error); }
+.advice { white-space: pre-wrap; background: #fff; border-radius: 8px; padding: 8px; font-size: 0.85rem; }
+details summary { cursor: pointer; font-size: 0.85rem; }

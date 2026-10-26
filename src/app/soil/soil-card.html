@@ -1,0 +1,92 @@
+<section class="soil" aria-label="Soil">
+  <h2>Soil</h2>
+  <app-tip id="soil" text="Enter your soil type — or lab results if you have them — and we'll show which plants fit this bed. Leave it on the garden default if all beds are the same." />
+  @if (objectId() === undefined) {
+    <p class="muted">Saving the bed…</p>
+  } @else if (!bed()) {
+    @if (error(); as message) {
+      <p class="warning" role="alert">{{ message }} <button type="button" class="btn small" (click)="retry()">Retry</button></p>
+    } @else {
+      <p class="muted" role="status">Loading soil…</p>
+    }
+  } @else {
+    <label class="toggle">
+      <input type="checkbox" [checked]="useDefault()" (change)="toggleDefault(defaultBox.checked)" #defaultBox />
+      Use garden default
+    </label>
+
+    @if (useDefault()) {
+      <p class="muted">
+        @if (bed()?.gardenDefault) { Garden default: {{ label(bed()!.gardenDefault!.soilType) || 'type not set' }}, pH {{ bed()!.gardenDefault!.ph ?? 'not set' }}{{ bed()!.gardenDefault!.light ? ', ' + label(bed()!.gardenDefault!.light) : '' }}. }
+        @else { No garden default yet. }
+      </p>
+    } @else {
+      <ng-container *ngTemplateOutlet="form; context: { $implicit: draft(), target: 'bed' }" />
+      <button type="button" class="btn primary" (click)="saveBed()">Save soil</button>
+      @if (saved()) { <span class="muted" role="status">Saved</span> }
+    }
+
+    <details [open]="showGarden()" (toggle)="showGarden.set(gardenDetails.open)" #gardenDetails>
+      <summary>Garden default</summary>
+      <ng-container *ngTemplateOutlet="form; context: { $implicit: gardenDraft(), target: 'garden' }" />
+      <button type="button" class="btn" (click)="saveGarden()">Save garden default</button>
+    </details>
+
+    @if (error()) { <p class="warning" role="alert" [id]="uid + '-error'">{{ error() }}</p> }
+
+    @if (fit(); as f) {
+      <h3>Suitability</h3>
+      @if (f.plantings.length === 0) { <p class="muted">No plantings this season.</p> }
+      <ul class="fit">
+        @for (i of f.plantings; track i.plantingId) {
+          <li><span class="badge" [class]="'badge ' + i.level">{{ label(i.level) }}</span> {{ i.nameEn }}
+            <small>{{ i.reasons.join('; ') }}</small></li>
+        }
+      </ul>
+      @if (f.suggestions.length) {
+        <h3>Fits this soil</h3>
+        <ul class="fit">
+          @for (i of f.suggestions; track i.plantId) {
+            <li><span class="badge GOOD">{{ label('GOOD') }}</span> {{ i.nameEn }} <small>{{ i.nameLv }}</small></li>
+          }
+        </ul>
+      }
+    }
+
+    <button type="button" class="btn" [disabled]="asking()" (click)="ask()">{{ asking() ? 'Asking…' : 'Ask AI what fits' }}</button>
+    @if (advice()) { <div class="advice" aria-live="polite">{{ advice() }}</div> }
+  }
+</section>
+
+<ng-template #form let-s let-target="target">
+  <div class="grid">
+    <label><span>Type</span>
+      <select class="field" (change)="patch(target, 'soilType', t.value)" #t>
+        <option value="" [selected]="!s.soilType">—</option>
+        @for (o of soilTypes; track o) { <option [value]="o" [selected]="s.soilType === o">{{ label(o) }}</option> }
+      </select>
+    </label>
+    @for (f of numericFields; track f.key) {
+      <label><span>{{ f.title }}</span>
+        <input class="field" type="number" [attr.step]="f.step" [attr.min]="f.min" [attr.max]="f.max" [value]="s[f.key] ?? ''" (input)="patch(target, f.key, $any($event.target).value, true)"
+          [attr.aria-invalid]="fieldError(target, f.key) ? true : null" [attr.aria-describedby]="fieldError(target, f.key) ? errId(target, f.key) : null" />
+        @if (fieldError(target, f.key); as e) { <small class="warning" [id]="errId(target, f.key)">{{ e }}</small> }</label>
+    }
+    <label><span>Moisture</span>
+      <select class="field" (change)="patch(target, 'moisture', m.value)" #m>
+        <option value="" [selected]="!s.moisture">—</option>
+        @for (o of ['DRY', 'MEDIUM', 'WET']; track o) { <option [value]="o" [selected]="s.moisture === o">{{ label(o) }}</option> }
+      </select>
+    </label>
+    <label><span>Light</span>
+      <select class="field" (change)="patch(target, 'light', l.value)" #l>
+        <option value="" [selected]="!s.light">—</option>
+        @for (o of ['SUN', 'PART', 'SHADE']; track o) { <option [value]="o" [selected]="s.light === o">{{ label(o) }}</option> }
+      </select>
+    </label>
+    <label><span>Tested on</span>
+      <input class="field" type="date" [value]="s.testedOn ?? ''" (input)="patch(target, 'testedOn', d.value)" #d /></label>
+  </div>
+  <label><span>Lab note</span>
+    <textarea class="field" maxlength="500" rows="2" [value]="s.labNote ?? ''" (input)="patch(target, 'labNote', note.value)" #note></textarea></label>
+</ng-template>
