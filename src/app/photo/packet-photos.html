@@ -1,0 +1,38 @@
+<div class="packets">
+  @for (photo of photos(); track photo.id) {
+    <button type="button" class="thumb" [attr.aria-label]="'View packet photo ' + (photo.name ?? '')" (click)="open(photo, thumbButton)" #thumbButton>
+      @if (photo.url) {
+        <img [src]="photo.url" alt="Seed packet" />
+      } @else if (photo.failed) {
+        <span class="failed" aria-hidden="true" title="Could not load photo">⚠</span>
+      }
+    </button>
+  }
+  @if (photos().length < max) {
+    <label class="add" [class.busy]="busy()" title="Add packet photo">
+      <span aria-hidden="true">{{ busy() ? '…' : '📷+' }}</span>
+      <span class="sr-only">{{ busy() ? 'Uploading packet photo' : 'Add packet photo' }}</span>
+      <input type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" [disabled]="busy()" (change)="onFile(fileInput)" #fileInput />
+    </label>
+  }
+  @if (error(); as e) {
+    <span class="error" role="alert">{{ e }}</span>
+  }
+</div>
+
+@if (viewing(); as v) {
+  <div class="overlay" role="dialog" aria-modal="true" aria-label="Seed packet photo" (click)="close()">
+    <figure (click)="$event.stopPropagation()">
+      @if (v.url) {
+        <img [src]="v.url" alt="Seed packet" />
+      } @else if (v.failed) {
+        <p>Could not load photo. Try again later.</p>
+      }
+      <figcaption>
+        <span>{{ v.name ?? 'Seed packet' }}</span>
+        <button type="button" class="btn small" (click)="remove(v)">Delete</button>
+        <button type="button" class="btn small" (click)="close()" #closeButton>Close</button>
+      </figcaption>
+    </figure>
+  </div>
+}
