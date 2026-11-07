@@ -1,0 +1,51 @@
+:host {
+  display: grid;
+  gap: 12px;
+  width: min(260px, calc(100vw - 48px));
+  padding: 8px;
+  font-size: 13px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.slider {
+  display: grid;
+  gap: 4px;
+
+  span {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hint {
+    color: var(--color-text-muted, inherit);
+    opacity: 0.8;
+  }
+
+  &.disabled span {
+    opacity: 0.6;
+  }
+
+  input {
+    width: 100%;
+    min-height: 32px;
+  }
+}
+
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 4px 0 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.legend .bloom {
+  background: conic-gradient(#d8577e, #f0c419, #7d62b8, #d8577e);
+}
