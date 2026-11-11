@@ -1,0 +1,49 @@
+<section class="block" aria-labelledby="assistant-title">
+  <header>
+    <h2 id="assistant-title">Garden assistant</h2>
+    @if (messages().length) {
+      <button type="button" class="link" [disabled]="busy()" (click)="clear()">Clear</button>
+    }
+  </header>
+
+  <app-tip id="assistant" text="Ask in plain words, e.g. “What can I sow next to carrots?” Answers are suggestions — double-check them against your seed packets." />
+
+  <div #log class="log" role="log" aria-live="polite">
+    @for (m of messages(); track $index) {
+      @if (m.role === 'user') {
+        <p class="msg user">{{ m.content }}</p>
+      } @else {
+        <div class="msg md" [innerHTML]="m.content | markdown"></div>
+      }
+    } @empty {
+      <p class="muted">Ask about sowing times, companions or crop rotation. The assistant sees your beds and this season’s plantings.</p>
+      <div class="suggestions">
+        @for (s of suggestions; track s) {
+          <button type="button" class="chip" (click)="send(s)">{{ s }}</button>
+        }
+      </div>
+    }
+    @if (busy()) {
+      <span class="sr-only">Assistant is typing…</span>
+      <p class="msg typing" aria-hidden="true"><span></span><span></span><span></span></p>
+    }
+  </div>
+
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <form (ngSubmit)="send()">
+    <input
+      class="field"
+      name="question"
+      [(ngModel)]="draft"
+      placeholder="Ask the assistant…"
+      maxlength="2000"
+      autocomplete="off"
+      aria-label="Question for the assistant"
+    />
+    <button type="submit" class="btn" [disabled]="busy() || !draft.trim()">Send</button>
+  </form>
+  <p class="muted note">AI answers can be wrong. Powered by Groq.</p>
+</section>
