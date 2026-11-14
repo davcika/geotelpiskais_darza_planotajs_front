@@ -1,0 +1,31 @@
+@if (tour.active()) {
+  <div class="tour-root">
+    @if (spot(); as s) {
+      <div class="tour-spot" [style.top.px]="s.top" [style.left.px]="s.left"
+           [style.width.px]="s.width" [style.height.px]="s.height"></div>
+    } @else {
+      <div class="tour-dim"></div>
+    }
+    <!-- Apmācības laikā lapu klikšķināt nevar -->
+    <div class="tour-blocker"></div>
+
+    <div #card class="tour-card" [class.dock]="pos().placement === 'dock'"
+         [style.top.px]="pos().top" [style.left.px]="pos().placement === 'dock' ? null : pos().left"
+         role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-text" tabindex="-1">
+      <div class="tour-head">
+        <span class="tour-count">{{ tour.counter().current }} / {{ tour.counter().total }}</span>
+        <button type="button" class="tour-skip" (click)="tour.skip()">Skip tour</button>
+      </div>
+      <div aria-live="polite">
+        <h2 id="tour-title">{{ step().title }}</h2>
+        <p id="tour-text">{{ step().text }}</p>
+      </div>
+      <div class="tour-actions">
+        <button type="button" class="btn" (click)="tour.back()" [disabled]="tour.isFirst()">Back</button>
+        <button type="button" class="btn primary" (click)="tour.next()">
+          {{ tour.isLast() ? 'Finish' : 'Next' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,23 @@
+<button
+  #trigger
+  type="button"
+  class="btn trigger {{ triggerClass() }}"
+  aria-haspopup="true"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="panelId"
+  [attr.aria-label]="label()"
+  [attr.data-tour]="tourId() ?? null"
+  [disabled]="disabled()"
+  (click)="toggle()"
+>
+  @if (icon(); as i) {
+    <span class="icon" aria-hidden="true">{{ i }}</span>
+  }
+  <span class="text" [class.has-icon]="!!icon()" aria-hidden="true">{{ label() }}</span>
+  <span class="caret" aria-hidden="true">▾</span>
+</button>
+@if (open()) {
+  <div #panel class="panel" [id]="panelId" [class.end]="align() === 'end'" (click)="onPanelClick($event)">
+    <ng-content />
+  </div>
+}

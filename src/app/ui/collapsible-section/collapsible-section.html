@@ -1,0 +1,14 @@
+<section class="section" [class.open]="open()" [attr.data-tour]="tourId() ?? null">
+  <h2>
+    <button type="button" class="head" [attr.aria-expanded]="open()" [attr.aria-controls]="'section-' + id()" (click)="toggle()">
+      <span class="chevron" aria-hidden="true">›</span>
+      <span class="title">{{ title() }}</span>
+      @if (summary()) {
+        <span class="summary">{{ summary() }}</span>
+      }
+    </button>
+  </h2>
+  <div class="body" [id]="'section-' + id()" [hidden]="!open()">
+    <ng-content />
+  </div>
+</section>

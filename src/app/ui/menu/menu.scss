@@ -1,0 +1,113 @@
+:host {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  white-space: nowrap;
+
+  &[aria-expanded='true'] {
+    background: var(--color-bg);
+  }
+}
+
+.caret {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+/* Šaurā ekrānā paliek tikai ikona */
+@media (max-width: 560px) {
+  .text.has-icon,
+  .text.has-icon + .caret {
+    display: none;
+  }
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 200px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+
+  &.end {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: pop 120ms ease-out;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Vienumi nāk no ārpuses, tāpēc vajag ng deep */
+:host ::ng-deep .menu-item > svg.mi,
+:host ::ng-deep .menu-item > app-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+
+:host ::ng-deep .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-bg);
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+:host ::ng-deep .menu-note {
+  margin: 0;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host ::ng-deep .menu-sep {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--color-border);
+}
